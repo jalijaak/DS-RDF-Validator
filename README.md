@@ -1,6 +1,6 @@
 [README.md](https://github.com/user-attachments/files/23991000/README.md)
 
-[![Launch Application](https://img.shields.io/badge/Launch%20Application-blue?style=for-the-badge)](index.html)
+[**Launch the RDF Vocabulary Manager Application**](index.html)
 
 # **3DEXPERIENCE RDF Vocabulary Manager & Validator**
 
