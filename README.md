@@ -1,7 +1,5 @@
 [README.md](https://github.com/user-attachments/files/23991000/README.md)
 
-[**Launch the RDF Vocabulary Manager Application**](index.html)
-
 # **3DEXPERIENCE RDF Vocabulary Manager & Validator**
 
 This is a single-file web application (rdf\_validator.html) designed to create, validate, and manage RDF/XML vocabularies used for tagging and data structuring within the 3DEXPERIENCE platform.  
