@@ -1,4 +1,7 @@
 [README.md](https://github.com/user-attachments/files/23991000/README.md)
+
+[![Launch Application](https://img.shields.io/badge/Launch%20Application-blue?style=for-the-badge)](index.html)
+
 # **3DEXPERIENCE RDF Vocabulary Manager & Validator**
 
 This is a single-file web application (rdf\_validator.html) designed to create, validate, and manage RDF/XML vocabularies used for tagging and data structuring within the 3DEXPERIENCE platform.  
