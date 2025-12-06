@@ -10,10 +10,18 @@
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f3ff6; }
         .error-row { background-color: #fee2e2 !important; }
         .warning-row { background-color: #fef3c7 !important; }
-        /* Style for the custom input when dropdown is 'Other' */
         .custom-version-input {
             display: none;
             margin-top: 4px;
+        }
+        .fixed-namespace {
+            background-color: #e5e7eb; /* Gray-200 */
+            cursor: not-allowed;
+        }
+        .required {
+            color: #dc2626; /* Red-600 */
+            font-weight: 700;
+            font-style: italic;
         }
     </style>
 </head>
@@ -21,20 +29,23 @@
 
     <!-- Header -->
     <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3" title="3DEXPERIENCE RDF Vocabulary Manager">
             <i class="fa-solid fa-cube text-2xl"></i>
             <h1 class="text-xl font-semibold">3DEXPERIENCE RDF Vocabulary Manager</h1>
         </div>
         <div class="flex gap-2">
-            <button onclick="clearAll()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-sm transition">
+            <button onclick="clearAll()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-sm transition" 
+                    title="Clear all current data (metadata and attributes) and reset the editor to a new, empty vocabulary structure.">
                 <i class="fa-solid fa-file-circle-plus mr-2"></i> New Vocabulary
             </button>
-            <button onclick="document.getElementById('fileInput').click()" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-sm transition">
+            <button onclick="document.getElementById('fileInput').click()" class="bg-blue-700 hover:bg-blue-600 px-4 py-2 rounded text-sm transition" 
+                    title="Upload an existing RDF (.rdf, .xml) file to load and edit its attributes and metadata.">
                 <i class="fa-solid fa-upload mr-2"></i> Load RDF
             </button>
             <input type="file" id="fileInput" class="hidden" accept=".rdf,.xml" onchange="handleFileUpload(event)">
             
-            <button onclick="exportRDF()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm transition">
+            <button onclick="exportRDF()" class="bg-green-600 hover:bg-green-500 px-4 py-2 rounded text-sm transition" 
+                    title="Generate and download the complete RDF/XML file based on the current attributes and metadata.">
                 <i class="fa-solid fa-download mr-2"></i> Export RDF
             </button>
         </div>
@@ -47,18 +58,19 @@
         <div class="w-1/3 flex flex-col border-r border-gray-300 bg-white">
             <div class="p-3 bg-gray-100 border-b font-semibold text-gray-700 flex justify-between">
                 <span>Validation Report</span>
-                <span id="errorCount" class="bg-red-500 text-white text-xs px-2 py-1 rounded-full hidden">0 Issues</span>
+                <span id="errorCount" class="bg-blue-500 text-white text-xs px-2 py-1 rounded-full" title="Current validation status of the vocabulary.">Ready to Build</span>
             </div>
             <div id="validationReport" class="flex-1 overflow-y-auto p-4 space-y-3">
-                <div class="text-gray-500 text-center mt-10 italic">Load a file to see validation results.</div>
+                <div class="text-gray-500 text-center mt-10 italic">Workspace cleared. Start adding attributes!</div>
             </div>
             
-            <div class="p-3 bg-gray-100 border-t border-b font-semibold text-gray-700">
+            <div class="p-3 bg-gray-100 border-t border-b font-semibold text-gray-700" title="The full RDF/XML code generated from your settings and attributes, ready for export.">
                 Raw RDF Source
             </div>
             <textarea id="rawRdfInput" class="flex-1 w-full p-2 font-mono text-xs resize-none focus:outline-none" spellcheck="false"></textarea>
             <div class="p-2 bg-gray-50 border-t text-right">
-                <button onclick="parseAndLoadFromText()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs">
+                <button onclick="parseAndLoadFromText()" class="bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded text-xs"
+                        title="If you manually edit the Raw RDF Source above, click here to re-analyze and load the changes into the editor table and metadata.">
                     Re-Analyze Text
                 </button>
             </div>
@@ -69,43 +81,66 @@
             
             <!-- Metadata / Header Settings Section -->
             <div class="p-4 bg-white border-b shadow-sm">
-                <h2 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide">Vocabulary Settings (Ontology Header)</h2>
+                <h2 class="font-bold text-gray-800 mb-3 text-sm uppercase tracking-wide" title="Metadata information defining the overall vocabulary (Ontology Header).">Vocabulary Settings (Ontology Header)</h2>
                 <div class="grid grid-cols-2 gap-4">
+                    <!-- Editable Vocabulary Name -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Vocabulary Name (Label)</label>
-                        <input type="text" id="metaLabel" onchange="updateMeta('label', this.value)" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" placeholder="e.g. My Fastener Vocabulary">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1" title="The descriptive name of the vocabulary (e.g., Fastener_Vocabulary). Used in rdfs:label.">Vocabulary Name (<span class="required">Required</span>)</label>
+                        <input type="text" id="metaLabel" oninput="updateMeta('label', this.value)" maxlength="50" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" placeholder="e.g. Fastener_Vocabulary" title="Enter the name of the vocabulary. Must use only letters, numbers, and underscore (_).">
+                        <p id="labelError" class="text-xs text-red-500 mt-1 hidden">Invalid characters or too long. Use only A-Z, 0-9, and underscore (_). Max 50 chars.</p>
                     </div>
+                    
+                    <!-- Fixed Namespace URI Display -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Namespace URI (Base)</label>
-                        <input type="text" id="metaNamespace" onchange="updateMeta('namespace', this.value)" class="w-full border rounded px-2 py-1 text-sm font-mono focus:border-blue-500 outline-none" placeholder="http://www.3ds.com/vocabularies/MyVocab/">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1" title="The unique URI identifying this vocabulary. It is automatically constructed from the fixed base and the Vocabulary Name.">Namespace URI (Base)</label>
+                        <div class="w-full border rounded px-2 py-1 text-sm font-mono fixed-namespace flex flex-wrap" title="The full namespace URI for this vocabulary.">
+                            <span class="text-gray-700">http://www.3ds.com/vocabularies/</span>
+                            <span id="namespaceSuffix" class="font-bold text-blue-700"></span>
+                            <span class="text-gray-700">/</span>
+                        </div>
+                        <input type="hidden" id="metaNamespace" value="">
                     </div>
+                    
                     <!-- Version Info with Dropdown and Custom Input -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Version Info</label>
-                        <select id="metaVersionSelect" onchange="handleVersionChange(this.value)" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none">
-                            <option value="">(Select Version)</option>
+                        <label class="block text-xs font-semibold text-gray-600 mb-1" title="The version identifier for the vocabulary. Used in owl:versionInfo.">Version Info (<span class="required">Required</span>)</label>
+                        <select id="metaVersionSelect" onchange="handleVersionChange(this.value)" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" title="Select a standard version or choose 'Other (Custom)'.">
+                            <option value="v1.0.0">v1.0.0 (Semantic)</option>
                             <option value="R2024x">R2024x</option>
                             <option value="R2023x">R2023x</option>
                             <option value="R2022x">R2022x</option>
-                            <option value="v1.0.0">v1.0.0 (Semantic)</option>
                             <option value="custom">Other (Custom)</option>
                         </select>
-                        <input type="text" id="metaVersionCustom" oninput="updateMeta('version', this.value)" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none custom-version-input" placeholder="Enter custom version info...">
-                        <input type="hidden" id="metaVersion" value=""> <!-- Hidden input to hold the actual value for export -->
+                        <input type="text" id="metaVersionCustom" oninput="updateMeta('version', this.value)" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none custom-version-input" placeholder="Enter custom version info..." title="Enter a custom version string for the vocabulary.">
+                        <input type="hidden" id="metaVersion" value="v1.0.0"> <!-- Hidden input to hold the actual value for export -->
                     </div>
-                    <!-- End Version Info -->
+                    <!-- Description -->
                     <div>
-                        <label class="block text-xs font-semibold text-gray-600 mb-1">Description (Comment)</label>
-                        <input type="text" id="metaComment" onchange="updateMeta('comment', this.value)" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" placeholder="Vocabulary description...">
+                        <label class="block text-xs font-semibold text-gray-600 mb-1" title="A brief description or comment for the vocabulary. Used in rdfs:comment.">Description (Comment)</label>
+                        <input type="text" id="metaComment" onchange="updateMeta('comment', this.value)" class="w-full border rounded px-2 py-1 text-sm focus:border-blue-500 outline-none" placeholder="Vocabulary description..." title="Enter a descriptive comment for the vocabulary.">
                     </div>
                 </div>
             </div>
 
             <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-                <h2 class="font-bold text-gray-800 text-sm uppercase tracking-wide">Attributes (Predicates)</h2>
-                <button onclick="addNewRow()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm shadow">
-                    <i class="fa-solid fa-plus mr-1"></i> Add Attribute
-                </button>
+                <h2 class="font-bold text-gray-800 text-sm uppercase tracking-wide" title="List of all defined attributes (predicates) in the vocabulary.">Attributes (Predicates)</h2>
+                <div class="flex gap-2">
+                    <button onclick="document.getElementById('csvFileInput').click()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded text-sm shadow"
+                            title="Import attributes from a CSV file. The file must contain columns: ID, Label, Type, Comment.">
+                        <i class="fa-solid fa-file-import mr-1"></i> Import CSV
+                    </button>
+                    <input type="file" id="csvFileInput" class="hidden" accept=".csv" onchange="importCSV(event)">
+            
+                    <button onclick="exportCSV()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-1 rounded text-sm shadow"
+                            title="Export all current attributes in the table to a CSV file for backup or editing.">
+                        <i class="fa-solid fa-file-export mr-1"></i> Export CSV
+                    </button>
+                    
+                    <button onclick="addNewRow()" class="bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 rounded text-sm shadow"
+                            title="Add a new blank row to the attributes table.">
+                        <i class="fa-solid fa-plus mr-1"></i> Add Attribute
+                    </button>
+                </div>
             </div>
 
             <div class="flex-1 overflow-auto p-4">
@@ -113,11 +148,12 @@
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-gray-700 uppercase bg-gray-100 border-b">
                             <tr>
-                                <th class="px-4 py-3 w-1/5">ID (Predicate)</th>
-                                <th class="px-4 py-3 w-1/4">Label (en)</th>
-                                <th class="px-4 py-3 w-1/5">6W Dimension</th>
-                                <th class="px-4 py-3 w-1/4">Comment</th>
-                                <th class="px-4 py-3 w-12 text-center">Act</th>
+                                <!-- Tooltip comments added via 'title' attribute -->
+                                <th class="px-4 py-3 w-1/5" title="The unique identifier (Predicate ID) for the attribute within the vocabulary (e.g., 'partNumber'). This is used in the 'rdf:about' attribute."><span class="required">ID</span> (Predicate)</th>
+                                <th class="px-4 py-3 w-1/4" title="The human-readable name of the attribute (e.g., 'Part Number'). Used in 'rdfs:label'.">Label (en)</th>
+                                <th class="px-4 py-3 w-1/5" title="The 6W Dimension this attribute falls under (What, Who, When, Where, Why, How). Used in 'rdfs:subPropertyOf' pointing to ds6w.">6W Dimension</th>
+                                <th class="px-4 py-3 w-1/4" title="A descriptive comment explaining the attribute's purpose. Used in 'rdfs:comment'.">Comment</th>
+                                <th class="px-4 py-3 w-12 text-center" title="Actions for the attribute row (e.g., Delete).">Act</th>
                             </tr>
                         </thead>
                         <tbody id="attributesTable">
@@ -131,8 +167,15 @@
     </main>
 
 <script>
-// --- Initial Data (Sample RDF for demonstration, used on initial load) ---
-const sampleRDF = `<?xml version="1.0"?>
+// --- Constants ---
+const FIXED_NAMESPACE_BASE = "http://www.3ds.com/vocabularies/";
+
+// Updated template to include ALL standard entities and the local vocabulary entity
+const MINIMAL_RDF_TEMPLATE = (label, namespace, version, comment) => {
+    // Determine the short entity name (e.g., Fastener_Vocabulary)
+    const vocabEntityName = label.replace(/[^a-zA-Z0-9_]/g, '');
+
+    return `<?xml version="1.0"?>
 <!DOCTYPE rdf:RDF [
   <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
   <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
@@ -140,7 +183,7 @@ const sampleRDF = `<?xml version="1.0"?>
   <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
   <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
   <!ENTITY ds6w "http://www.3ds.com/vocabularies/ds6w#" >
-  <!ENTITY ELOP_Vocabulary "http://www.3ds.com/vocabularies/ELOP_Vocabulary/\" > 
+  <!ENTITY ${vocabEntityName} "${namespace}" >
 ]>
 
 <rdf:RDF 
@@ -150,55 +193,44 @@ const sampleRDF = `<?xml version="1.0"?>
   xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
   xmlns:owl="http://www.w3.org/2002/07/owl#"
   xmlns:ds6w="http://www.3ds.com/vocabularies/ds6w#"
-  xmlns:ELOP_Vocabulary="http://www.3ds.com/vocabularies/ELOP_Vocabulary/"
-  xml:base="http://www.3ds.com/vocabularies/ELOP_Vocabulary/">
+  xmlns:${vocabEntityName}="${namespace}"
+  xml:base="${namespace}">
   
-  <owl:Ontology rdf:about="http://www.3ds.com/vocabularies/ELOP_Vocabulary/">
-	  <rdfs:label xml:lang="en">ELOP_Vocabulary attributes 6wtaggs Vocabulary</rdfs:label>
-	  <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">This ontology defines the vocabulary related to Elop Predicates for the 3DExperience Tagger.</rdfs:comment>
-	  <owl:versionInfo>R2021x</owl:versionInfo>
-	  <owl:imports rdf:resource="ds6w"/>							
+  <owl:Ontology rdf:about="${namespace}">
+    <rdfs:label xml:lang="en">${label}</rdfs:label>
+    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">${comment}</rdfs:comment>
+    <owl:versionInfo>${version}</owl:versionInfo>
+    <owl:imports rdf:resource="http://www.3ds.com/vocabularies/ds6w"/>
   </owl:Ontology>
   
-  <owl:DatatypeProperty rdf:about="Commodity">
-	  <rdfs:label xml:lang="en">Commodity</rdfs:label>
-	  <rdfs:subPropertyOf rdf:resource="&ds6w;what"/>
-	  <rdfs:range rdf:resource="&xsd;string"/>
-	  <rdfs:comment xml:lang="en">English desciption of the Commodity predicate</rdfs:comment>
-  </owl:DatatypeProperty> 
-
-  <owl:DatatypeProperty rdf:about="VendorName">
-	  <rdfs:label xml:lang="en">VendorName</rdfs:label>
-	  <rdfs:subPropertyOf rdf:resource="&ds6w;who"/>
-	  <rdfs:range rdf:resource="&xsd;string"/>
-	  <rdfs:comment xml:lang="en">English desciption of the Vendor Name predicate</rdfs:comment>
-  </owl:DatatypeProperty>  
-   
+  <!-- Attribute definitions will appear here -->
 </rdf:RDF>`;
+};
 
-// --- Application Logic ---
 
+// --- Application State ---
 let globalParsedData = [];
 let globalOntologyMeta = {
     label: "",
-    namespace: "",
-    version: "", // Will hold the final version string
+    namespace: FIXED_NAMESPACE_BASE, // Fixed base, suffix is derived from label
+    version: "v1.0.0", 
     comment: ""
 };
 
+// --- Initialization ---
 document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('rawRdfInput').value = sampleRDF;
-    parseAndLoadFromText();
+    // Start with a blank canvas
+    clearAll(); 
 });
 
 // Function to reset the application state to a blank vocabulary
 function clearAll() {
     // Reset Metadata
     globalOntologyMeta = {
-        label: "New_Vocabulary",
-        namespace: "http://www.3ds.com/vocabularies/NewVocab/",
-        version: "v1.0",
-        comment: "A new vocabulary created from scratch."
+        label: "NewVocabulary",
+        namespace: FIXED_NAMESPACE_BASE,
+        version: "v1.0.0",
+        comment: "A new vocabulary for 3DEXPERIENCE tagging."
     };
     
     // Reset Attributes
@@ -206,23 +238,32 @@ function clearAll() {
 
     // Update UI elements
     document.getElementById('metaLabel').value = globalOntologyMeta.label;
-    document.getElementById('metaNamespace').value = globalOntologyMeta.namespace;
     document.getElementById('metaComment').value = globalOntologyMeta.comment;
     
     // Reset Version Select
     const versionSelect = document.getElementById('metaVersionSelect');
     const versionCustom = document.getElementById('metaVersionCustom');
-    versionSelect.value = 'v1.0.0'; // Set default semantic version
+    versionSelect.value = 'v1.0.0';
     versionCustom.value = '';
     versionCustom.style.display = 'none';
-    document.getElementById('metaVersion').value = 'v1.0.0'; // Update hidden value
+    document.getElementById('metaVersion').value = 'v1.0.0';
+
+    // Update raw input with the complete minimal template (Request 2)
+    document.getElementById('rawRdfInput').value = MINIMAL_RDF_TEMPLATE(
+        globalOntologyMeta.label,
+        FIXED_NAMESPACE_BASE + globalOntologyMeta.label + "/",
+        globalOntologyMeta.version,
+        globalOntologyMeta.comment
+    );
     
-    // Clear raw input and report
-    document.getElementById('rawRdfInput').value = `<?xml version="1.0"?>\n<rdf:RDF></rdf:RDF>`;
+    // Initial UI updates
+    updateMeta('label', globalOntologyMeta.label); // This call updates the namespace display
     document.getElementById("validationReport").innerHTML = '<div class="text-gray-500 text-center mt-10 italic">Workspace cleared. Start adding attributes!</div>';
     document.getElementById("errorCount").textContent = "Ready to Build";
     document.getElementById("errorCount").classList.remove("hidden", "bg-red-500", "bg-yellow-500", "bg-green-500");
     document.getElementById("errorCount").classList.add("bg-blue-500");
+    document.getElementById('labelError').classList.add('hidden');
+
 
     renderTable();
 }
@@ -247,7 +288,6 @@ function handleVersionChange(value) {
     if (value === 'custom') {
         customInput.style.display = 'block';
         customInput.focus();
-        // Set the hidden value to the custom input's value for export
         hiddenInput.value = customInput.value; 
     } else {
         customInput.style.display = 'none';
@@ -256,38 +296,97 @@ function handleVersionChange(value) {
     updateMeta('version', hiddenInput.value);
 }
 
+// Function to validate the vocabulary label (ID)
+function validateLabel(label) {
+    const labelInput = document.getElementById('metaLabel');
+    const labelError = document.getElementById('labelError');
+    const regex = /^[a-zA-Z0-9_]+$/; // Letters, numbers, and underscore only
+
+    if (label.length > 50) {
+        labelError.textContent = "Maximum length is 50 characters.";
+        labelError.classList.remove('hidden');
+        labelInput.classList.add('border-red-500');
+        return false;
+    }
+    
+    if (!regex.test(label) && label.length > 0) {
+        labelError.textContent = "Invalid characters. Use only A-Z, 0-9, and underscore (_).";
+        labelError.classList.remove('hidden');
+        labelInput.classList.add('border-red-500');
+        return false;
+    }
+    
+    if (label.length === 0) {
+        labelError.textContent = "Vocabulary Name is required.";
+        labelError.classList.remove('hidden');
+        labelInput.classList.add('border-red-500');
+        return false;
+    }
+
+    // Passed validation
+    labelError.classList.add('hidden');
+    labelInput.classList.remove('border-red-500');
+    return true;
+}
+
 function parseAndLoadFromText() {
     const text = document.getElementById('rawRdfInput').value;
     const parser = new DOMParser();
     
-    // Simple preprocessing to handle entities
+    // Simple preprocessing to handle the most common required entities for 3DS vocabularies
+    // We add more entities here to support loading older/custom files that use them.
     let preprocessedText = text
         .replace(/&ds6w;/g, "http://www.3ds.com/vocabularies/ds6w#")
-        .replace(/&xsd;/g, "http://www.w3.org/2001/XMLSchema#");
+        .replace(/&xsd;/g, "http://www.w3.org/2001/XMLSchema#")
+        .replace(/&rdf;/g, "http://www.w3.org/1999/02/22-rdf-syntax-ns#")
+        .replace(/&xml;/g, "http://www.w3.org/XML/1998/namespace");
+
+    // The local vocab entity name is dynamic, so we try to extract and resolve it based on the DOCTYPE
+    const docTypeMatch = text.match(/<!ENTITY\s+([a-zA-Z0-9_]+)\s+"(http:\/\/www\.3ds\.com\/vocabularies\/[^"]+\/)"\s*>/);
+    if (docTypeMatch && docTypeMatch.length === 3) {
+        const entityName = docTypeMatch[1];
+        const entityUri = docTypeMatch[2];
+        const regex = new RegExp(`&${entityName};`, 'g');
+        preprocessedText = preprocessedText.replace(regex, entityUri);
+    }
+
 
     const xmlDoc = parser.parseFromString(preprocessedText, "text/xml");
     const parseError = xmlDoc.querySelector("parsererror");
     
     if (parseError) {
-        reportIssue("XML Syntax Error: " + parseError.textContent, 'critical');
+        // More descriptive error message for the common prefix/entity issue (Request 3 fix)
+        reportIssue(`XML Syntax Error: ${parseError.textContent}. If loading a file, this often means a custom DTD Entity (like '&MyVocabName;') used in the XML could not be resolved by the browser. Please ensure the Raw RDF Source is syntactically valid XML.`, 'critical');
         document.getElementById('rawRdfInput').style.borderColor = 'red';
         return;
     }
     document.getElementById('rawRdfInput').style.borderColor = '';
 
     // --- Parse Ontology Metadata ---
-    const rdfTag = xmlDoc.getElementsByTagName("rdf:RDF")[0];
-    if (rdfTag && rdfTag.getAttribute("xml:base")) {
-        globalOntologyMeta.namespace = rdfTag.getAttribute("xml:base");
-    }
-
+    let parsedNamespace = "";
+    
     const ontologyTag = xmlDoc.getElementsByTagName("owl:Ontology")[0];
     if (ontologyTag) {
-        // If rdf:about exists, it usually matches namespace
+        // If rdf:about exists, it represents the full namespace
         if (ontologyTag.getAttribute("rdf:about")) {
-            globalOntologyMeta.namespace = ontologyTag.getAttribute("rdf:about");
+            parsedNamespace = ontologyTag.getAttribute("rdf:about");
         }
         
+        // Try to derive the simple label from the namespace
+        if (parsedNamespace.startsWith(FIXED_NAMESPACE_BASE) && parsedNamespace.endsWith('/')) {
+            let derivedLabel = parsedNamespace.substring(FIXED_NAMESPACE_BASE.length, parsedNamespace.length - 1);
+            if(validateLabel(derivedLabel)) {
+                globalOntologyMeta.label = derivedLabel;
+            } else {
+                globalOntologyMeta.label = "InvalidLabel";
+                reportIssue(`Loaded RDF namespace: ${parsedNamespace} does not follow the required pattern (BaseURI/Label/) or Label contains invalid characters. Label set to 'InvalidLabel'.`, "warning");
+            }
+        } else {
+             // Fallback if it doesn't match the standard prefix
+             globalOntologyMeta.label = "CustomNamespace";
+             reportIssue(`Loaded RDF uses a custom Namespace URI: ${parsedNamespace}. Cannot derive standard Label.`, "warning");
+        }
+
         const labelNode = ontologyTag.getElementsByTagName("rdfs:label")[0];
         if (labelNode) globalOntologyMeta.label = labelNode.textContent;
 
@@ -297,17 +396,17 @@ function parseAndLoadFromText() {
         const versionNode = ontologyTag.getElementsByTagName("owl:versionInfo")[0];
         if (versionNode) globalOntologyMeta.version = versionNode.textContent;
     } else {
-        // Handle case where RDF is valid XML but missing Ontology header (common for scratch files)
-        globalOntologyMeta.label = "Missing Ontology Header";
-        globalOntologyMeta.comment = "Please manually add a label, version, and namespace.";
+        // Handle case where RDF is valid XML but missing Ontology header
+        globalOntologyMeta.label = "MissingHeader";
+        globalOntologyMeta.comment = "Please manually add a label, version, and description.";
         globalOntologyMeta.version = "N/A";
         reportIssue("Ontology header (<owl:Ontology>) missing in the loaded RDF. Using default metadata.", "warning");
     }
 
-    // Populate Metadata Inputs
+    // Populate Metadata Inputs and force UI update via updateMeta
     document.getElementById('metaLabel').value = globalOntologyMeta.label;
-    document.getElementById('metaNamespace').value = globalOntologyMeta.namespace;
     document.getElementById('metaComment').value = globalOntologyMeta.comment;
+    updateMeta('label', globalOntologyMeta.label); // This forces namespace display update
 
     // Handle Version Info population
     const versionSelect = document.getElementById('metaVersionSelect');
@@ -315,7 +414,6 @@ function parseAndLoadFromText() {
     const currentVersion = globalOntologyMeta.version;
     document.getElementById('metaVersion').value = currentVersion;
 
-    // Check if the current version matches any dropdown option
     let match = false;
     for (let i = 0; i < versionSelect.options.length; i++) {
         if (versionSelect.options[i].value === currentVersion) {
@@ -327,13 +425,11 @@ function parseAndLoadFromText() {
         }
     }
     
-    // If no match, set to 'Other (Custom)'
     if (!match) {
         versionSelect.value = 'custom';
         versionCustom.value = currentVersion;
         versionCustom.style.display = 'block';
     }
-
 
     // --- Parse Attributes ---
     globalParsedData = [];
@@ -358,12 +454,12 @@ function parseAndLoadFromText() {
         const subPropNode = prop.getElementsByTagName("rdfs:subPropertyOf")[0];
         if (subPropNode) {
             let res = subPropNode.getAttribute("rdf:resource");
-            // Check for full URI or entity reference
-            if(res && res.includes("who")) type = "ds6w:who";
-            else if(res && res.includes("when")) type = "ds6w:when";
-            else if(res && res.includes("where")) type = "ds6w:where";
-            else if(res && res.includes("why")) type = "ds6w:why";
-            else if(res && res.includes("how")) type = "ds6w:how";
+            // Check for entity reference or full URI match
+            if(res && (res.includes("who") || res.includes("ds6w:who"))) type = "ds6w:who";
+            else if(res && (res.includes("when") || res.includes("ds6w:when"))) type = "ds6w:when";
+            else if(res && (res.includes("where") || res.includes("ds6w:where"))) type = "ds6w:where";
+            else if(res && (res.includes("why") || res.includes("ds6w:why"))) type = "ds6w:why";
+            else if(res && (res.includes("how") || res.includes("ds6w:how"))) type = "ds6w:how";
             else type = "ds6w:what";
         }
 
@@ -380,10 +476,28 @@ function parseAndLoadFromText() {
 }
 
 function updateMeta(field, value) {
-    globalOntologyMeta[field] = value;
-    if (field === 'version') {
+    if (field === 'label') {
+        const isValid = validateLabel(value);
+        if (isValid) {
+            globalOntologyMeta.label = value;
+            // Construct the full Namespace URI
+            const fullNamespace = FIXED_NAMESPACE_BASE + value + "/";
+            globalOntologyMeta.namespace = fullNamespace;
+            document.getElementById('metaNamespace').value = fullNamespace;
+            document.getElementById('namespaceSuffix').textContent = value;
+        } else {
+            // If validation fails, do not update internal state, but let validation function display error.
+            document.getElementById('namespaceSuffix').textContent = value; // Update display to show current invalid input
+        }
+    } else if (field === 'version') {
+        globalOntologyMeta.version = value;
         document.getElementById('metaVersion').value = value;
+    } else {
+        globalOntologyMeta[field] = value;
     }
+    
+    // Re-run attribute validation whenever metadata changes (important for export)
+    runValidation();
 }
 
 function renderTable() {
@@ -402,13 +516,13 @@ function renderTable() {
         
         tr.innerHTML = `
             <td class="px-4 py-2">
-                <input type="text" value="${item.id}" onchange="updateData(${index}, 'id', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none">
+                <input type="text" value="${item.id}" onchange="updateData(${index}, 'id', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none" title="Enter the unique Attribute ID (Predicate).">
             </td>
             <td class="px-4 py-2">
-                <input type="text" value="${item.label}" onchange="updateData(${index}, 'label', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none">
+                <input type="text" value="${item.label}" onchange="updateData(${index}, 'label', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none" title="Enter the human-readable label.">
             </td>
             <td class="px-4 py-2">
-                <select onchange="updateData(${index}, 'type', this.value)" class="w-full bg-transparent text-gray-700 outline-none">
+                <select onchange="updateData(${index}, 'type', this.value)" class="w-full bg-transparent text-gray-700 outline-none" title="Select the 6W Dimension for this attribute (ds6w:subPropertyOf).">
                     <option value="ds6w:what" ${item.type === 'ds6w:what' ? 'selected' : ''}>What (Content)</option>
                     <option value="ds6w:who" ${item.type === 'ds6w:who' ? 'selected' : ''}>Who (People)</option>
                     <option value="ds6w:where" ${item.type === 'ds6w:where' ? 'selected' : ''}>Where (Location)</option>
@@ -418,10 +532,10 @@ function renderTable() {
                 </select>
             </td>
             <td class="px-4 py-2">
-                <input type="text" value="${item.comment}" onchange="updateData(${index}, 'comment', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none text-gray-500 italic">
+                <input type="text" value="${item.comment}" onchange="updateData(${index}, 'comment', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none text-gray-500 italic" title="Enter a description for the attribute.">
             </td>
             <td class="px-4 py-2 text-center">
-                <button onclick="deleteRow(${index})" class="text-red-500 hover:text-red-700"><i class="fa-solid fa-trash"></i></button>
+                <button onclick="deleteRow(${index})" class="text-red-500 hover:text-red-700" title="Delete this attribute row."><i class="fa-solid fa-trash"></i></button>
             </td>
         `;
         tbody.appendChild(tr);
@@ -450,12 +564,171 @@ function addNewRow() {
     runValidation();
 }
 
+// Helper to parse CSV (simple implementation assuming quoted fields for safety)
+function parseCSV(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length < 2) throw new Error("File must contain a header and at least one data row.");
+
+    const header = lines[0].trim().split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+    
+    // Ensure required headers are present (ID, Label, Type, Comment)
+    const requiredHeaders = ['id', 'label', 'type', 'comment'];
+    if (!requiredHeaders.every(h => header.includes(h))) {
+         throw new Error("Missing required headers in CSV: ID, Label, Type, Comment.");
+    }
+    
+    const idIndex = header.indexOf('id');
+    const labelIndex = header.indexOf('label');
+    const typeIndex = header.indexOf('type');
+    const commentIndex = header.indexOf('comment');
+
+    const attributes = [];
+
+    // Simple parser loop for data rows (skipping lines[0] which is the header)
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+
+        // Uses a regex to split only on commas outside of double quotes, allowing for quoted values.
+        const values = line.match(/(?:[^,"]+|"[^"]*")+/g).map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
+        
+        // Re-check length just in case the simple regex parser failed
+        if (values.length < 4) {
+             throw new Error(`Row ${i + 1} is malformed or missing columns.`);
+        }
+
+        // Mapping values based on detected header index
+        const idValue = values[idIndex] || '';
+        const labelValue = values[labelIndex] || '';
+        const commentValue = values[commentIndex] || '';
+        const rawType = values[typeIndex];
+
+        // Basic type validation
+        let type = 'ds6w:what';
+        if (rawType) {
+            const normalizedType = rawType.toLowerCase().replace('ds6w:', '');
+            if (['what', 'who', 'when', 'where', 'why', 'how'].includes(normalizedType)) {
+                type = `ds6w:${normalizedType}`;
+            } else {
+                throw new Error(`Row ${i + 1}: Invalid 6W Dimension value: ${rawType}. Must be one of: ds6w:what, ds6w:who, ds6w:when, ds6w:where, ds6w:why, ds6w:how.`);
+            }
+        }
+        
+        if (idValue.trim() === '') {
+             throw new Error(`Row ${i + 1}: Attribute ID cannot be empty.`);
+        }
+
+        attributes.push({
+            id: idValue,
+            label: labelValue,
+            type: type,
+            comment: commentValue
+        });
+    }
+
+    return attributes;
+}
+
+// New function for CSV import
+function importCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        const csvText = e.target.result;
+        try {
+            const newAttributes = parseCSV(csvText);
+            
+            if (newAttributes.length === 0) {
+                reportIssue("CSV file contains no valid attribute data.", "critical");
+                return;
+            }
+
+            // Replace current data with imported data
+            globalParsedData = newAttributes;
+            renderTable();
+            runValidation();
+            reportIssue(`Successfully imported ${newAttributes.length} attributes from CSV.`, "success");
+
+        } catch (error) {
+            reportIssue(`Error processing CSV file: ${error.message}`, "critical");
+        }
+    };
+    reader.readAsText(file);
+    // Clear the file input value so the same file can be imported again if needed
+    event.target.value = null;
+}
+
+// New function for CSV export
+function exportCSV() {
+    if (globalParsedData.length === 0) {
+        reportIssue("Cannot export empty table.", "warning");
+        return;
+    }
+
+    const header = ["ID", "Label", "Type", "Comment"];
+    const csvRows = [];
+    csvRows.push(header.join(',')); // Add header row
+
+    globalParsedData.forEach(item => {
+        // Use a function to properly quote and escape values for CSV
+        const quoteAndEscape = (value) => {
+            if (value === null || value === undefined) return '""';
+            const str = String(value);
+            // Escape double quotes by doubling them up, then wrap the whole string in double quotes
+            return `"${str.replace(/"/g, '""')}"`; 
+        };
+
+        const safeId = quoteAndEscape(item.id);
+        const safeLabel = quoteAndEscape(item.label);
+        const safeType = quoteAndEscape(item.type);
+        const safeComment = quoteAndEscape(item.comment);
+        
+        csvRows.push([safeId, safeLabel, safeType, safeComment].join(','));
+    });
+
+    const csvContent = csvRows.join('\n');
+    
+    // Download Logic
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${globalOntologyMeta.label.replace(/[^a-zA-Z0-9_]/g, '')}_attributes.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    reportIssue("Attributes exported to CSV successfully.", "success");
+}
+
+
 function runValidation() {
     const reportDiv = document.getElementById("validationReport");
-    reportDiv.innerHTML = "";
+    // Clear only attribute-related issues; keep success/error messages from import/export if they are prepended.
+    // For simplicity, we just clear and repopulate all non-transient messages here.
+    const transientMessages = Array.from(reportDiv.children).filter(child => child.classList.contains('bg-green-100') || child.classList.contains('bg-red-100'));
+    reportDiv.innerHTML = '';
+    transientMessages.forEach(msg => reportDiv.appendChild(msg));
+
+
     let errorCount = 0;
     let warningCount = 0;
     
+    // Check if the current vocabulary label is valid before checking attributes
+    const isLabelValid = validateLabel(document.getElementById('metaLabel').value); // Check current input value
+    if (!isLabelValid) {
+        errorCount++;
+        // Do not add another reportIssue here, as validateLabel handles the UI message.
+    }
+
+    // Check if version is set
+    if (!globalOntologyMeta.version || globalOntologyMeta.version.trim() === "" || globalOntologyMeta.version.toLowerCase() === "n/a") {
+        errorCount++;
+        reportIssue("Vocabulary Version Info is required for export.", "critical");
+    }
+
     // Clear previous highlights
     document.querySelectorAll("tr").forEach(tr => tr.classList.remove("error-row", "warning-row"));
 
@@ -465,7 +738,7 @@ function runValidation() {
     globalParsedData.forEach((item, index) => {
         if (!item.id || item.id.trim() === "") {
             errorCount++;
-            reportIssue(`Attribute at row ${index + 1} has an empty ID (rdf:about).`, "critical");
+            reportIssue(`Attribute at row ${index + 1} has an empty ID (rdf:about). Attribute ID is required.`, "critical");
             const row = document.getElementById(`row-${index}`);
             if (row) row.classList.add("error-row");
         } else if (ids[item.id]) {
@@ -475,9 +748,9 @@ function runValidation() {
         }
 
         // Check typos
-        if (item.comment.includes("desciption")) {
+        if (item.comment && item.comment.toLowerCase().includes("desciption")) {
             warningCount++;
-            reportIssue("Typo detected: 'desciption' in a comment field. (Should be 'description')", "warning");
+            reportIssue(`Row ${index + 1}: Typo detected: 'desciption' in a comment field. (Should be 'description')`, "warning");
         }
     });
 
@@ -493,13 +766,6 @@ function runValidation() {
         }
     });
     
-    // Check Imports (Warning if the raw text is loaded with bad imports)
-    const rawText = document.getElementById('rawRdfInput').value;
-    if(rawText.includes('<owl:imports rdf:resource="ds6w"/>')) {
-        warningCount++;
-        reportIssue(`Invalid owl:imports reference: "ds6w" is often wrong. It should be the full URI: "http://www.3ds.com/vocabularies/ds6w"`, "warning");
-    }
-
     const badge = document.getElementById("errorCount");
     badge.classList.remove("hidden", "bg-red-500", "bg-yellow-500", "bg-green-500", "bg-blue-500");
 
@@ -520,77 +786,98 @@ function runValidation() {
     if (errorCount === 0 && warningCount === 0 && globalParsedData.length === 0) {
         reportDiv.innerHTML = '<div class="text-gray-500 text-center mt-10 italic">No issues found. Add attributes or load a file.</div>';
     }
-
 }
 
 function reportIssue(msg, type) {
     const reportDiv = document.getElementById("validationReport");
     const div = document.createElement("div");
-    const color = type === 'critical' ? 'text-red-700 bg-red-100 border-red-300' : 'text-yellow-800 bg-yellow-100 border-yellow-300';
-    const icon = type === 'critical' ? '<i class="fa-solid fa-circle-exclamation mr-2"></i>' : '<i class="fa-solid fa-triangle-exclamation mr-2"></i>';
+    let color, icon;
+    
+    if (type === 'critical') {
+        color = 'text-red-700 bg-red-100 border-red-300';
+        icon = '<i class="fa-solid fa-circle-exclamation mr-2"></i>';
+    } else if (type === 'warning') {
+        color = 'text-yellow-800 bg-yellow-100 border-yellow-300';
+        icon = '<i class="fa-solid fa-triangle-exclamation mr-2"></i>';
+    } else if (type === 'success') { // Added success type
+        color = 'text-green-800 bg-green-100 border-green-300';
+        icon = '<i class="fa-solid fa-circle-check mr-2"></i>';
+    } else { // Default to blue for info
+        color = 'text-blue-800 bg-blue-100 border-blue-300';
+        icon = '<i class="fa-solid fa-circle-info mr-2"></i>';
+    }
     
     div.className = `p-3 rounded border text-sm ${color}`;
     div.innerHTML = `${icon} ${msg}`;
-    reportDiv.appendChild(div);
+    
+    // Prepend success/critical messages to make them immediately visible
+    if (type === 'critical' || type === 'success') {
+        // Find existing success/critical messages and replace or remove them
+        const existingMessages = Array.from(reportDiv.children);
+        existingMessages.forEach(child => {
+            if ((type === 'critical' && child.classList.contains('bg-red-100')) || 
+                (type === 'success' && child.classList.contains('bg-green-100'))) {
+                reportDiv.removeChild(child);
+            }
+        });
+        reportDiv.prepend(div);
+    } else {
+        reportDiv.appendChild(div);
+    }
 }
 
 function exportRDF() {
-    // Get the final version string from the hidden input
-    const finalVersion = document.getElementById('metaVersion').value || globalOntologyMeta.version;
-    const finalLabel = document.getElementById('metaLabel').value || globalOntologyMeta.label || "Untitled Vocabulary";
-    const finalNamespace = document.getElementById('metaNamespace').value || globalOntologyMeta.namespace || "http://www.3ds.com/vocabularies/default/";
-    const finalComment = document.getElementById('metaComment').value || globalOntologyMeta.comment || "Generated by the RDF Vocabulary Manager.";
+    // Re-validate before export
+    runValidation();
+    const badge = document.getElementById("errorCount");
+    if (badge.classList.contains("bg-red-500")) {
+        reportIssue("Export failed. Critical validation errors found. Please check the report.", "critical");
+        return;
+    }
+    
+    // Get the validated and constructed metadata
+    const finalVersion = globalOntologyMeta.version;
+    const finalLabel = globalOntologyMeta.label;
+    const finalComment = globalOntologyMeta.comment || "Generated by the RDF Vocabulary Manager.";
+    // The namespace is constructed using the fixed base + validated label
+    const finalNamespace = globalOntologyMeta.namespace; 
 
     // Reconstruct XML with fixed header values from settings
-    let rdf = `<?xml version="1.0"?>
-<!DOCTYPE rdf:RDF [
-  <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
-  <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
-  <!ENTITY xsd "http://www.w3.org/2001/XMLSchema#" >
-  <!ENTITY rdfs "http://www.w3.org/2000/01/rdf-schema#" >
-  <!ENTITY rdf "http://www.w3.org/1999/02/22-rdf-syntax-ns#" >
-  <!ENTITY ds6w "http://www.3ds.com/vocabularies/ds6w#" >
-]>
+    let rdf = MINIMAL_RDF_TEMPLATE(finalLabel, finalNamespace, finalVersion, finalComment);
+    
+    // Strip the closing tags from the template so we can inject the attributes
+    rdf = rdf.replace('\n  <!-- Attribute definitions will appear here -->\n</rdf:RDF>', '');
 
-<rdf:RDF 
-  xmlns:xsd="http://www.w3.org/2001/XMLSchema#"
-  xmlns:xml="http://www.w3.org/XML/1998/namespace"
-  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-  xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
-  xmlns:owl="http://www.w3.org/2002/07/owl#"
-  xmlns:ds6w="http://www.3ds.com/vocabularies/ds6w#"
-  xml:base="${finalNamespace}">
-  
-  <owl:Ontology rdf:about="${finalNamespace}">
-    <rdfs:label xml:lang="en">${finalLabel}</rdfs:label>
-    <rdfs:comment rdf:datatype="http://www.w3.org/2001/XMLSchema#string">${finalComment}</rdfs:comment>
-    <owl:versionInfo>${finalVersion}</owl:versionInfo>
-    <owl:imports rdf:resource="http://www.3ds.com/vocabularies/ds6w"/>
-  </owl:Ontology>
-`;
 
     globalParsedData.forEach(item => {
         // Map simplified 6W selection back to URI
         const parentResource = `&ds6w;${item.type.split(':')[1]}`;
         
+        // Escape special XML characters in comment and label for safety
+        const safeLabel = item.label.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+        const safeComment = item.comment.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+
         rdf += `
   <owl:DatatypeProperty rdf:about="${item.id}">
-      <rdfs:label xml:lang="en">${item.label}</rdfs:label>
+      <rdfs:label xml:lang="en">${safeLabel}</rdfs:label>
       <rdfs:subPropertyOf rdf:resource="${parentResource}"/>
       <rdfs:range rdf:resource="&xsd;string"/>
-      <rdfs:comment xml:lang="en">${item.comment}</rdfs:comment>
+      <rdfs:comment xml:lang="en">${safeComment}</rdfs:comment>
   </owl:DatatypeProperty>
 `;
     });
 
     rdf += `\n</rdf:RDF>`;
 
+    // Update the raw input area before download
+    document.getElementById('rawRdfInput').value = rdf;
+
     // Download Logic
     const blob = new Blob([rdf], { type: "application/rdf+xml" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${finalLabel.replace(/[^a-zA-Z0-9]/g, '_')}.rdf`;
+    a.download = `${finalLabel.replace(/[^a-zA-Z0-9_]/g, '')}.rdf`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
