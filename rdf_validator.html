@@ -34,6 +34,13 @@
             <h1 class="text-xl font-semibold">3DEXPERIENCE RDF Vocabulary Manager</h1>
         </div>
         <div class="flex gap-2">
+            
+            <!-- NEW README LINK ADDED HERE -->
+            <a href="README.md" target="_blank" class="bg-blue-500 hover:bg-blue-400 px-4 py-2 rounded text-sm transition flex items-center" 
+                    title="View documentation and usage instructions.">
+                <i class="fa-solid fa-book mr-2"></i> README
+            </a>
+            
             <button onclick="clearAll()" class="bg-red-700 hover:bg-red-600 px-4 py-2 rounded text-sm transition" 
                     title="Clear all current data (metadata and attributes) and reset the editor to a new, empty vocabulary structure.">
                 <i class="fa-solid fa-file-circle-plus mr-2"></i> New Vocabulary
@@ -706,11 +713,10 @@ function exportCSV() {
 
 function runValidation() {
     const reportDiv = document.getElementById("validationReport");
-    // Clear only attribute-related issues; keep success/error messages from import/export if they are prepended.
-    // For simplicity, we just clear and repopulate all non-transient messages here.
-    const transientMessages = Array.from(reportDiv.children).filter(child => child.classList.contains('bg-green-100') || child.classList.contains('bg-red-100'));
+    // Clear previous dynamic report messages (not system messages like 'success' or 'critical' from export/import)
+    const systemMessages = Array.from(reportDiv.children).filter(child => child.getAttribute('data-system-message'));
     reportDiv.innerHTML = '';
-    transientMessages.forEach(msg => reportDiv.appendChild(msg));
+    systemMessages.forEach(msg => reportDiv.appendChild(msg));
 
 
     let errorCount = 0;
@@ -720,13 +726,13 @@ function runValidation() {
     const isLabelValid = validateLabel(document.getElementById('metaLabel').value); // Check current input value
     if (!isLabelValid) {
         errorCount++;
-        // Do not add another reportIssue here, as validateLabel handles the UI message.
+        // validateLabel handles the UI error message display
     }
 
     // Check if version is set
     if (!globalOntologyMeta.version || globalOntologyMeta.version.trim() === "" || globalOntologyMeta.version.toLowerCase() === "n/a") {
         errorCount++;
-        reportIssue("Vocabulary Version Info is required for export.", "critical");
+        reportIssue("Vocabulary Version Info is required for export.", "critical", true);
     }
 
     // Clear previous highlights
@@ -738,7 +744,7 @@ function runValidation() {
     globalParsedData.forEach((item, index) => {
         if (!item.id || item.id.trim() === "") {
             errorCount++;
-            reportIssue(`Attribute at row ${index + 1} has an empty ID (rdf:about). Attribute ID is required.`, "critical");
+            reportIssue(`Attribute at row ${index + 1} has an empty ID (rdf:about). Attribute ID is required.`, "critical", true);
             const row = document.getElementById(`row-${index}`);
             if (row) row.classList.add("error-row");
         } else if (ids[item.id]) {
@@ -750,7 +756,9 @@ function runValidation() {
         // Check typos
         if (item.comment && item.comment.toLowerCase().includes("desciption")) {
             warningCount++;
-            reportIssue(`Row ${index + 1}: Typo detected: 'desciption' in a comment field. (Should be 'description')`, "warning");
+            reportIssue(`Row ${index + 1}: Typo detected: 'desciption' in a comment field. (Should be 'description')`, "warning", true);
+            const row = document.getElementById(`row-${index}`);
+            if (row) row.classList.add("warning-row");
         }
     });
 
@@ -758,7 +766,7 @@ function runValidation() {
     Object.keys(ids).forEach(id => {
         if (ids[id].length > 1) {
             errorCount++;
-            reportIssue(`Duplicate Attribute ID found: <strong>${id}</strong>. Used on rows ${ids[id].map(i => i + 1).join(', ')}.`, "critical");
+            reportIssue(`Duplicate Attribute ID found: <strong>${id}</strong>. Used on rows ${ids[id].map(i => i + 1).join(', ')}.`, "critical", true);
             ids[id].forEach(rowIndex => {
                 const row = document.getElementById(`row-${rowIndex}`);
                 if (row) row.classList.add("error-row");
@@ -788,7 +796,7 @@ function runValidation() {
     }
 }
 
-function reportIssue(msg, type) {
+function reportIssue(msg, type, isValidationMessage = false) {
     const reportDiv = document.getElementById("validationReport");
     const div = document.createElement("div");
     let color, icon;
@@ -810,18 +818,27 @@ function reportIssue(msg, type) {
     div.className = `p-3 rounded border text-sm ${color}`;
     div.innerHTML = `${icon} ${msg}`;
     
-    // Prepend success/critical messages to make them immediately visible
-    if (type === 'critical' || type === 'success') {
-        // Find existing success/critical messages and replace or remove them
-        const existingMessages = Array.from(reportDiv.children);
-        existingMessages.forEach(child => {
-            if ((type === 'critical' && child.classList.contains('bg-red-100')) || 
-                (type === 'success' && child.classList.contains('bg-green-100'))) {
-                reportDiv.removeChild(child);
-            }
-        });
-        reportDiv.prepend(div);
+    // Add data attribute to distinguish system messages from validation messages
+    if (isValidationMessage) {
+        // Validation messages are appended normally and cleared by runValidation
     } else {
+        // System messages (import/export results) are prepended and kept until manually cleared or new system message arrives
+        div.setAttribute('data-system-message', type);
+        
+        // Remove old system messages of the same type (e.g., clear previous success after a new export)
+        Array.from(reportDiv.querySelectorAll(`[data-system-message="${type}"]`)).forEach(el => el.remove());
+
+        reportDiv.prepend(div);
+        
+        // Optionally remove transient system messages after a delay
+        if (type === 'success') {
+            setTimeout(() => {
+                div.remove();
+            }, 5000);
+        }
+    }
+    
+    if (isValidationMessage) {
         reportDiv.appendChild(div);
     }
 }
@@ -881,6 +898,8 @@ function exportRDF() {
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
+    
+    reportIssue("RDF file exported successfully.", "success");
 }
 </script>
 </body>
