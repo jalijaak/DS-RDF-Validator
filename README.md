@@ -1,6 +1,6 @@
 [README.md](https://github.com/user-attachments/files/23991000/README.md)
 
-[**Launch the RDF Vocabulary Manager Application**](index.html)
+[**Launch the RDF Vocabulary Manager Application**](https://jalijaak.github.io/DS-RDF-Validator/rdf_validator.html)
 
 # **3DEXPERIENCE RDF Vocabulary Manager & Validator**
 
