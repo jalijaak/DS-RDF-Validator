@@ -3,7 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3DEXPERIENCE RDF Vocabulary Validator & Editor</title>
+    
+    <!-- SEO Metadata -->
+    <title>3DEXPERIENCE RDF Vocabulary Manager | Validator & Editor</title>
+    <meta name="description" content="The 3DEXPERIENCE RDF Vocabulary Manager is a specialized tool to create, edit, and validate custom RDF vocabularies for 6W tagging. Resolve 'silent failures' with real-time syntax checking.">
+    <meta name="keywords" content="3DEXPERIENCE, RDF, Vocabulary Manager, 6W Tagging, PLM, Dassault Systemes, RDF Validator, Ontology Editor">
+    <meta name="author" content="Jalijaak">
+
+    <!-- Social Media Metadata (Open Graph) -->
+    <meta property="og:title" content="3DEXPERIENCE RDF Vocabulary Manager">
+    <meta property="og:description" content="Create, manage and fix 3DEXPERIENCE RDF vocabulary import errors with this visual vocabulary editor and validator.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://jalijaak.github.io/DS-RDF-Validator/rdf_validator.html">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -170,13 +182,11 @@
 <script>
 // --- Constants ---
 const FIXED_NAMESPACE_BASE = "http://www.3ds.com/vocabularies/";
-
-// Minimal RDF template to ensure the header (Ontology and initial entity declarations) is correctly formed.
 const MINIMAL_RDF_TEMPLATE = (label, namespace, version, comment) => {
-    // Determine the short entity name (e.g., Fastener_Vocabulary)
-    const vocabEntityName = label.replace(/[^a-zA-Z0-9_]/g, '');
+// Determine the short entity name (e.g., Fastener_Vocabulary)
+const vocabEntityName = label.replace(/[^a-zA-Z0-9_]/g, '');
 
-    return `<?xml version="1.0"?>
+return `<?xml version="1.0"?>
 <!DOCTYPE rdf:RDF [
   <!ENTITY owl "http://www.w3.org/2002/07/owl#" >
   <!ENTITY xml "http://www.w3.org/XML/1998/namespace" >
@@ -268,7 +278,6 @@ function updateRawRdfInput() {
         document.getElementById('rawRdfInput').value = "Cannot generate RDF: Vocabulary Name is invalid or missing. Please correct the error in the Vocabulary Settings.";
     }
 }
-
 
 // Resets the application state to a blank vocabulary.
 function clearAll() {
@@ -862,3 +871,4 @@ function exportRDF() {
 </script>
 </body>
 </html>
+
