@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <link rel="canonical" href="https://jalijaak.github.io/DS-RDF-Validator/">
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     
     <!-- SEO Metadata -->
-    <title>3DEXPERIENCE RDF Vocabulary Manager | Validator & Editor</title>
-    <meta name="description" content="The 3DEXPERIENCE RDF Vocabulary Manager is a specialized tool to create, edit, and validate custom RDF vocabularies for 6W tagging. Resolve 'silent failures' with real-time syntax checking.">
+    <title>3DEXPERIENCE RDF Vocabulary Validator & Manager for 6W Tagging</title>
+
+    <meta name="description" content="Online 3DEXPERIENCE RDF Vocabulary Validator and Manager. Create, edit and validate 6W RDF vocabularies and fix silent import errors." />
     <meta name="keywords" content="3DEXPERIENCE, RDF, Vocabulary Manager, 6W Tagging, PLM, Dassault Systemes, RDF Validator, Ontology Editor">
     <meta name="author" content="Jalijaak">
 
@@ -14,7 +17,7 @@
     <meta property="og:title" content="3DEXPERIENCE RDF Vocabulary Manager">
     <meta property="og:description" content="Create, manage and fix 3DEXPERIENCE RDF vocabulary import errors with this visual vocabulary editor and validator.">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://jalijaak.github.io/DS-RDF-Validator/rdf_validator.html">
+    <meta property="og:url" content="https://jalijaak.github.io/DS-RDF-Validator/">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
@@ -43,7 +46,9 @@
     <header class="bg-blue-900 text-white p-4 shadow-md flex justify-between items-center">
         <div class="flex items-center gap-3" title="3DEXPERIENCE RDF Vocabulary Manager">
             <i class="fa-solid fa-cube text-2xl"></i>
-            <h1 class="text-xl font-semibold">3DEXPERIENCE RDF Vocabulary Manager</h1>
+            <h1 class="text-xl font-semibold">
+              3DEXPERIENCE RDF Vocabulary Validator & Manager
+            </h1>
         </div>
         <div class="flex gap-2">
             <a href="https://github.com/jalijaak/DS-RDF-Validator" target="_blank" class="bg-blue-500 hover:bg-blue-400 px-4 py-2 rounded text-sm transition flex items-center" 
@@ -67,6 +72,11 @@
             </button>
         </div>
     </header>
+    <p class="text-sm text-gray-200 mt-2 max-w-3xl">
+      This tool validates, edits and generates RDF vocabularies for the 
+      3DEXPERIENCE platform. It helps PLM engineers detect silent import errors,
+      enforce 6W tagging rules, and export valid RDF/XML files.
+    </p>
 
     <!-- Main Content Panels -->
     <main class="flex-1 flex overflow-hidden">
@@ -871,4 +881,5 @@ function exportRDF() {
 </script>
 </body>
 </html>
+
 
