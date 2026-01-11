@@ -660,19 +660,27 @@ function parseCSV(csvText) {
         if (/^,+$/.test(line)) continue;
         
         // Use regex to split only on commas outside of double quotes
-        const values = (line.match(/(?:[^,"]+|"[^"]*")+/g) || [])
-            .slice(0, header.length)
-            .map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
-        
-        if (values.length < 4) {
-             throw new Error(`Row ${i + 1} is malformed or missing columns.`);
-        }
+        const values = line
+		  .split(/,(?=(?:[^"]*"[^"]*")*[^"]*$)/)
+		  .map(v =>
+			  v.replace(/^"|"$/g, '')
+			   .replace(/""/g, '"')
+			   .trim()
+		  );
+		
+		const idValue = values[idIndex] || '';
+		let labelValue = values[labelIndex] || '';
+		const commentValue = values[commentIndex] || '';
+		const rawType = values[typeIndex];
 
-        const idValue = values[idIndex] || '';
-        const labelValue = values[labelIndex] || '';
-        const commentValue = values[commentIndex] || '';
-        const rawType = values[typeIndex];
+        if (idValue.trim() === '') {
+			throw new Error(`Row ${i + 1}: Attribute ID cannot be empty.`);
+		}
 
+		if (labelValue.trim() === '') {
+			labelValue = idValue;
+		}
+		
         let type = 'ds6w:what';
         if (rawType) {
             const normalizedType = rawType.toLowerCase().replace('ds6w:', '');
