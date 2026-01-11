@@ -661,6 +661,7 @@ function parseCSV(csvText) {
         
         // Use regex to split only on commas outside of double quotes
         const values = (line.match(/(?:[^,"]+|"[^"]*")+/g) || [])
+            .slice(0, header.length)
             .map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
         
         if (values.length < 4) {
@@ -913,10 +914,3 @@ function exportRDF() {
 </script>
 </body>
 </html>
-
-
-
-
-
-
-
