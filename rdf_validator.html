@@ -656,8 +656,12 @@ function parseCSV(csvText) {
         const line = lines[i].trim();
         if (!line) continue;
 
+        // Ignore rows that contain only commas (e.g. ",,," or ",")
+        if (/^,+$/.test(line)) continue;
+        
         // Use regex to split only on commas outside of double quotes
-        const values = line.match(/(?:[^,"]+|"[^"]*")+/g).map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
+        const values = (line.match(/(?:[^,"]+|"[^"]*")+/g) || [])
+            .map(v => v.replace(/^"|"$/g, '').replace(/""/g, '"').trim());
         
         if (values.length < 4) {
              throw new Error(`Row ${i + 1} is malformed or missing columns.`);
@@ -909,6 +913,7 @@ function exportRDF() {
 </script>
 </body>
 </html>
+
 
 
 
