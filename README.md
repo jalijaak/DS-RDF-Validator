@@ -1,6 +1,6 @@
 [README.md](https://github.com/user-attachments/files/23991000/README.md)
 
-[**Launch the RDF Vocabulary Manager Application**](https://jalijaak.github.io/DS-RDF-Validator/rdf_validator.html)
+[**Launch the RDF Vocabulary Manager Application**](https://jalijaak.github.io/DS-RDF-Validator/)
 
 # **3DEXPERIENCE RDF Vocabulary Manager & Validator**
 
@@ -25,9 +25,9 @@ It provides a user-friendly interface to define predicates (attributes) and esse
 
 ## **Usage**
 
-The application is entirely self-contained within the rdf\_validator.html file.
+The application is entirely self-contained within the main file.
 
-1. **Open the Application:** Open rdf\_validator.html in any modern web browser.  
+1. **Open the Application:** Open [rdf validator](https://jalijaak.github.io/DS-RDF-Validator/) in any modern web browser.  
 2. **Set Vocabulary Settings:** Fill out the **Vocabulary Settings** section (Name, Version, and Comment). The Name is crucial as it defines the Namespace URI.  
 3. **Manage Attributes:**  
    * Click **Add Attribute** to manually add a new row.  
