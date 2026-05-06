@@ -39,6 +39,10 @@
             font-weight: 700;
             font-style: italic;
         }
+        .invalid-id {
+            border-bottom: 1px solid #dc2626 !important;
+            background-color: #fee2e2 !important;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col">
@@ -220,6 +224,7 @@
 <script>
 // --- Constants ---
 const FIXED_NAMESPACE_BASE = "http://www.3ds.com/vocabularies/";
+const ATTRIBUTE_ID_REGEX = /^[a-zA-Z0-9_]+$/;
 const MINIMAL_RDF_TEMPLATE = (label, namespace, version, comment) => {
 // Determine the short entity name (e.g., Fastener_Vocabulary)
 const vocabEntityName = label.replace(/[^a-zA-Z0-9_]/g, '');
@@ -409,6 +414,12 @@ function validateLabel(label) {
     return true;
 }
 
+// Validates an attribute ID: only letters, digits and underscore allowed (no spaces or special chars).
+function validateAttributeId(id) {
+    if (!id || id.trim() === "") return false;
+    return ATTRIBUTE_ID_REGEX.test(id);
+}
+
 // Parses the RDF from the raw text input and updates the state and UI.
 function parseAndLoadFromText() {
     const text = document.getElementById('rawRdfInput').value;
@@ -580,9 +591,11 @@ function renderTable() {
         tr.className = "border-b hover:bg-gray-50 transition";
         tr.id = `row-${index}`;
         
+        const idInvalidClass = (item.id && !validateAttributeId(item.id)) ? 'invalid-id' : '';
+
         tr.innerHTML = `
             <td class="px-4 py-2">
-                <input type="text" value="${item.id}" onchange="updateData(${index}, 'id', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none" title="Enter the unique Attribute ID (Predicate).">
+                <input type="text" value="${item.id}" oninput="updateData(${index}, 'id', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none ${idInvalidClass}" title="Enter the unique Attribute ID (Predicate). Only letters, digits and underscore (_) allowed; no spaces or special characters.">
             </td>
             <td class="px-4 py-2">
                 <input type="text" value="${item.label}" onchange="updateData(${index}, 'label', this.value)" class="w-full bg-transparent border-b border-dashed border-gray-300 focus:border-blue-500 outline-none" title="Enter the human-readable label.">
@@ -612,6 +625,19 @@ function updateData(index, field, value) {
     globalParsedData[index][field] = value;
     runValidation();
     updateRawRdfInput();
+    if (field === 'id') {
+        const row = document.getElementById(`row-${index}`);
+        if (row) {
+            const idInput = row.querySelector('td:first-child input');
+            if (idInput) {
+                if (value && !validateAttributeId(value)) {
+                    idInput.classList.add('invalid-id');
+                } else {
+                    idInput.classList.remove('invalid-id');
+                }
+            }
+        }
+    }
 }
 
 function deleteRow(index) {
@@ -623,10 +649,10 @@ function deleteRow(index) {
 
 function addNewRow() {
     globalParsedData.push({
-        id: `NewAttribute${globalParsedData.length + 1}`,
-        label: "New Attribute",
+        id: "",
+        label: "",
         type: "ds6w:what",
-        comment: "Description here"
+        comment: ""
     });
     renderTable();
     runValidation();
@@ -675,6 +701,10 @@ function parseCSV(csvText) {
 
         if (idValue.trim() === '') {
 			throw new Error(`Row ${i + 1}: Attribute ID cannot be empty.`);
+		}
+
+		if (!validateAttributeId(idValue)) {
+			throw new Error(`Row ${i + 1}: Attribute ID '${idValue}' contains invalid characters. Only letters, digits and underscore (_) are allowed.`);
 		}
 
 		if (labelValue.trim() === '') {
@@ -809,10 +839,19 @@ function runValidation() {
             reportIssue(`Attribute at row ${index + 1} has an empty ID (rdf:about). Attribute ID is required.`, "critical", true);
             const row = document.getElementById(`row-${index}`);
             if (row) row.classList.add("error-row");
-        } else if (ids[item.id]) {
-            ids[item.id].push(index);
         } else {
-            ids[item.id] = [index];
+            if (!validateAttributeId(item.id)) {
+                errorCount++;
+                reportIssue(`Row ${index + 1}: Attribute ID <strong>${item.id}</strong> contains invalid characters. Only letters, digits and underscore (_) are allowed (no spaces or special characters).`, "critical", true);
+                const row = document.getElementById(`row-${index}`);
+                if (row) row.classList.add("error-row");
+            }
+
+            if (ids[item.id]) {
+                ids[item.id].push(index);
+            } else {
+                ids[item.id] = [index];
+            }
         }
 
         if (item.comment && item.comment.toLowerCase().includes("desciption")) {
@@ -922,5 +961,3 @@ function exportRDF() {
 </script>
 </body>
 </html>
-
-
