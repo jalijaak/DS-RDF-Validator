@@ -323,11 +323,12 @@ function updateRawRdfInput() {
 }
 
 // Resets the application state to a blank vocabulary.
+const DEFAULT_VERSION = "v1.0.0"
 function clearAll() {
     globalOntologyMeta = {
         label: "",
         namespace: FIXED_NAMESPACE_BASE,
-        version: "",
+        version: DEFAULT_VERSION,
         comment: ""
     };
     
@@ -338,7 +339,7 @@ function clearAll() {
     
     const versionSelect = document.getElementById('metaVersionSelect');
     const versionCustom = document.getElementById('metaVersionCustom');
-    versionSelect.value = 'v1.0.0';
+    versionSelect.value = DEFAULT_VERSION;
     versionCustom.value = '';
     versionCustom.style.display = 'none';
     
